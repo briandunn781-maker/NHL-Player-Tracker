@@ -1,12 +1,12 @@
 import mysql.connector
-from mysql.connector import Error
+import random
 
 class DAL:
     def __init__(self):
         self.config = {
-            "user": "root",
-            "password": "Z7Lyq7qn#x4QRgMUR^Xm",   
-            "database": "nhl_top_100"    
+            "user": "username",
+            "password": "password",   
+            "database": "NHL_Top_100" #hardcoded for now for correct syntax
         }
         self.cnx = None 
         self.cursor = None
@@ -15,8 +15,15 @@ class DAL:
         self.stats = Stats(self)
         self.nations = OlympicTeam(self)
         self.contracts = Contracts(self)
-
         
+    
+    def set_credentials(self, user, password, database): 
+        self.config.update({
+            "user": user,
+            "password": password,
+            "database": database
+        })
+
 
     def _get_connection(self):
         try:
@@ -61,6 +68,8 @@ class Teams:
             cursor.execute("SELECT * FROM Team_USA")
             results = cursor.fetchall()
             return results 
+        except Exception as e: 
+            print(f"Error: {e}")
         finally:
             cursor.close() 
     
@@ -119,6 +128,45 @@ class Players:
             print(f"Add Failed: {e}")
         finally: 
             cursor.close()
+
+    def deletePlayer(self, playerName): 
+        query = "CALL deletePlayer(%s)"
+        cursor = self.dal.get_cursor()
+        try: 
+            cursor.execute(query, (playerName,))
+            self.dal.commit()
+            return True
+        except Exception as e: 
+            return f'Add failed {e}'
+        finally:
+            cursor.close()
+
+    def viewPlayer(self): 
+        name = random.randint(0,49)
+        cursor = self.dal.get_cursor()
+        query = "SELECT Players.pName, Players.position, Teams.Team, Olympic_Team.Country FROM Players JOIN Teams ON Players.tID = Teams.Team_ID JOIN Olympic_Team ON Olympic_Team.Country_ID = Players.Country WHERE Players.player_ID = %s;"
+        try: 
+            cursor.execute(query, [name])
+            result = cursor.fetchall()
+            return result
+        except Exception as e: 
+            print(f"Error Fetching player {e}")
+        finally: 
+            cursor.close()
+ 
+    def playerProfile(self): 
+        cursor = self.dal.get_cursor() 
+        query = "SELECT * FROM Player_Profile" 
+        try: 
+            cursor.execute(query,)
+            results = cursor.fetchall()
+            if -1 in results: 
+                return 'player ID not in our database'
+            else: 
+                return results
+        finally: 
+            cursor.close()
+        
 
     
     def rosterMove(self, playerName, newTeam): 

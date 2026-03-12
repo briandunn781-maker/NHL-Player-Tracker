@@ -470,16 +470,12 @@ BEGIN
     DECLARE findPlayer INT;
     DECLARE findTeam INT;
     DECLARE findNation INT;
-    DECLARE duplicate INT;
 
     SELECT getPlayerID(playerName) INTO findPlayer;
     SELECT getTeamID(playerTeam) INTO findTeam;
     SELECT getCountryID(nation) INTO findNation;
 
-    
-    IF findPlayer != -1 THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'DUPLICATE ENTRY';
-    ELSEIF findPlayer = -1 AND findTeam = -1 AND findNation = -1 THEN
+    IF findPlayer = -1 AND findTeam = -1 AND findNation = -1 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'IMCOMPLETE DATA';
     ELSEIF findTeam = -1 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'The team you entered does not match our records';
@@ -518,22 +514,6 @@ CREATE PROCEDURE addContract(playerName VARCHAR(50), newAAV DECIMAL(5,3), newLen
     (new_pID, playerGP, playerGoals, playerAssists, playerPoints);
     END IF;
  END $$
- 
- 
- CREATE PROCEDURE addStatsGoalie(playerName VARCHAR(50), playerGP INT, playerSaves INT, playerSVP DECIMAL(5,3), playerWins INT)
- BEGIN 
-	DECLARE new_pID INT; 
-    SELECT getPlayerID(playerName) INTO new_pID; 
-    
-    IF new_pID = -1
-    THEN SELECT 'No Such Player Exists in our Database' AS PlayerError;
-    ELSE 
-    INSERT INTO Stats (pID, GP, Goals, Assists, Points) 
-    VALUES 
-    (new_pID, playerGP, playerSaves, playerSVP, playerWins);
-    END IF;
- END $$
- 
  
  CREATE PROCEDURE rosterMove(playerName VARCHAR(50), newTeam VARCHAR(50))
  BEGIN
@@ -578,26 +558,6 @@ END $$
  
  DELIMITER ; 
  
- 
- /* Views Called */
-SELECT * FROM Player_Profile;
-SELECT * FROM Goalie_Profile;
-
-/* One call for each stored procedure */
-/*Player Demonstration*/
-CALL getTeamRoster('Vegas Golden Knights');
 CALL getTeamRoster('Toronto Maple Leafs');
-CALL addPlayer('Ace Dunn', 'RW', 'Vegas Golden Knights', 'USA'); 
-CALL addStats('Ace Dunn', 62, 51, 22, 73);
-CALL addContract('Ace Dunn', 11.25, 8, '2025-08-23');
 
-/*Goalie Demonstration*/
-CALL addPlayer('Merrimack Warrior', 'G', 'Toronto Maple Leafs', 'Canada');
-CALL addStatsGoalie('Merrimack Warrior', 62, 791, 0.907, 44);
-CALL addContract('Merrimack Warrior', 6.2, 5, '2025-07-01');
 
-/*Updated Views with procedures to see clear player adds */
-CALL getTeamRoster('Vegas Golden Knights');
-CALL getTeamRoster('Toronto Maple Leafs');
-SELECT * FROM Player_Profile; 
-SELECT * FROM Goalie_Profile;
